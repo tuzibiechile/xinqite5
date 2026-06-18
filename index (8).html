@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>新奇特项目极速选品认领台</title>
+<style>
+  :root{
+    --bg:#f4f1ea;
+    --paper:#fbfaf6;
+    --ink:#1d1b16;
+    --ink-soft:#5c574c;
+    --line:#e0dacb;
+    --accent:#c0432b;
+    --accent-soft:#f3d9d1;
+    --gold:#a07b2d;
+    --green:#3f6f4a;
+    --shadow:0 1px 2px rgba(40,33,20,.06),0 8px 24px rgba(40,33,20,.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Noto Serif SC","Songti SC",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.5;
+  }
+  .wrap{max-width:1480px;margin:0 auto;padding:0 clamp(14px,3vw,40px);}
+
+  /* ---------- header ---------- */
+  header.top{
+    border-bottom:2px solid var(--ink);
+    background:var(--paper);
+    position:sticky;top:0;z-index:40;
+  }
+  .top-row{display:flex;align-items:flex-end;justify-content:space-between;padding:18px 0 14px;gap:16px;flex-wrap:wrap;}
+  .brand{display:flex;flex-direction:column;gap:2px;}
+  .brand h1{
+    font-size:clamp(22px,2.6vw,34px);
+    margin:0;letter-spacing:.5px;font-weight:800;
+  }
+  .brand .sub{font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--ink-soft);}
+  .top-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .search-box{position:relative;display:flex;align-items:center;}
+  .search-box .search-ico{position:absolute;left:11px;font-size:13px;opacity:.55;pointer-events:none;}
+  .search-box input{
+    width:230px;padding:9px 30px 9px 32px;border:1.5px solid var(--line);border-radius:999px;
+    background:var(--paper);color:var(--ink);font-size:13px;font-family:inherit;transition:border-color .15s ease,width .2s ease;
+  }
+  .search-box input:focus{outline:none;border-color:var(--ink);width:270px;}
+  .search-clear{
+    position:absolute;right:8px;width:20px;height:20px;border-radius:50%;background:#ece7da;color:var(--ink-soft);
+    font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;
+  }
+  .search-clear:hover{background:var(--accent);color:#fff;}
+  @media(max-width:560px){.search-box input{width:160px;}.search-box input:focus{width:180px;}}
+
+  button{font-family:inherit;cursor:pointer;border:none;}
+  .btn{
+    border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);
+    padding:9px 16px;font-size:13px;font-weight:600;border-radius:2px;
+    transition:transform .12s ease,background .15s ease,color .15s ease;
+  }
+  .btn:hover{transform:translateY(-1px);}
+  .btn.solid{background:var(--ink);color:var(--paper);}
+  .btn.solid:hover{background:var(--accent);border-color:var(--accent);}
+  .btn.tiny{padding:6px 11px;font-size:12px;}
+
+  /* ---------- tabs ---------- */
+  .tabs{display:flex;gap:6px;overflow-x:auto;padding:0 0 12px;scrollbar-width:thin;}
+  .tab{
+    white-space:nowrap;border:1.5px solid var(--line);background:transparent;
+    padding:8px 16px;border-radius:999px;font-size:14px;font-weight:600;color:var(--ink-soft);
+    display:flex;align-items:center;gap:8px;transition:all .15s ease;
+  }
+  .tab:hover{border-color:var(--ink);color:var(--ink);}
+  .tab.active{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+  .tab .cnt{
+    font-size:11px;background:rgba(0,0,0,.08);padding:1px 7px;border-radius:999px;font-weight:700;
+  }
+  .tab.active .cnt{background:rgba(255,255,255,.22);}
+  .tab.tab-fav{border-color:var(--accent-soft);color:var(--accent);}
+  .tab.tab-fav:hover{border-color:var(--accent);color:var(--accent);}
+  .tab.tab-fav.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+  /* ---------- main layout ---------- */
+  .layout{display:grid;grid-template-columns:1fr 340px;gap:clamp(18px,2.5vw,36px);padding:26px 0 70px;align-items:start;}
+  main{padding:0 0 70px;}
+
+  .section-head{display:flex;align-items:baseline;justify-content:space-between;margin:0 0 18px;gap:12px;flex-wrap:wrap;}
+  .section-head h2{font-size:clamp(18px,2vw,26px);margin:0;font-weight:800;}
+  .section-head .meta{font-size:13px;color:var(--ink-soft);}
+
+  /* product grid */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px;}
+  .card{
+    background:var(--paper);border:1px solid var(--line);border-radius:4px;overflow:hidden;
+    box-shadow:var(--shadow);display:flex;flex-direction:column;transition:transform .15s ease,box-shadow .15s ease;
+  }
+  .card:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(40,33,20,.12);}
+  .card .ph{aspect-ratio:1/1;background:#ece7da;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;}
+  .card .ph img{width:100%;height:100%;object-fit:cover;display:block;}
+  .card .ph .noimg{color:#b3ab95;font-size:13px;letter-spacing:2px;}
+  .card.card-pick{border-color:var(--gold);box-shadow:0 1px 2px rgba(160,123,45,.18),0 8px 24px rgba(160,123,45,.12);}
+  .pick-corner{position:absolute;top:0;left:0;z-index:2;background:var(--gold);color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-bottom-right-radius:8px;letter-spacing:.5px;}
+  .fav-btn{position:absolute;top:8px;right:8px;z-index:3;width:34px;height:34px;border-radius:50%;background:rgba(251,250,246,.92);color:var(--accent);font-size:17px;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(40,33,20,.18);transition:transform .12s ease,background .15s ease;}
+  .fav-btn:hover{transform:scale(1.12);background:#fff;}
+  .fav-btn.on{background:var(--accent);color:#fff;}
+  .mark-tag{align-self:flex-start;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;}
+  .mark-pick{color:#fff;background:var(--gold);}
+  .mark-normal{color:var(--ink-soft);background:#ece7da;}
+  .card .body{padding:13px 14px 15px;display:flex;flex-direction:column;gap:9px;flex:1;}
+  .card .title{font-size:14px;font-weight:600;line-height:1.4;min-height:2.7em;}
+  .card .cat-pill{align-self:flex-start;font-size:11px;color:var(--accent);background:var(--accent-soft);padding:2px 9px;border-radius:999px;font-weight:700;}
+  .card .claimed{
+    margin-top:auto;font-size:12px;color:var(--green);background:#e6efe7;border:1px solid #cfe0d2;
+    padding:8px 10px;border-radius:3px;line-height:1.5;
+  }
+  .card .claimed b{color:var(--ink);}
+  .card button.claim{margin-top:auto;}
+  .card-actions{margin-top:auto;display:flex;flex-direction:column;gap:7px;}
+  .btn.ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink-soft);font-size:12px;padding:7px 12px;}
+  .btn.ghost:hover{border-color:var(--ink);color:var(--ink);}
+  .view-count{font-size:13px;color:var(--ink-soft);margin-bottom:12px;}
+  .view-count b{color:var(--accent);font-size:16px;}
+  .view-row{display:flex;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line);}
+  .view-row:last-child{border-bottom:none;}
+  .vidx{width:24px;height:24px;flex-shrink:0;border-radius:50%;background:var(--ink);color:var(--paper);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+  .vinfo{flex:1;min-width:0;}
+  .vsupplier{font-size:14px;font-weight:700;}
+  .vspu{font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
+  .view-empty{padding:28px 12px;text-align:center;color:var(--ink-soft);font-size:14px;}
+
+  .empty{
+    border:2px dashed var(--line);border-radius:6px;padding:48px 24px;text-align:center;color:var(--ink-soft);
+    grid-column:1/-1;
+  }
+  .empty h3{margin:0 0 8px;color:var(--ink);font-size:18px;}
+
+  /* ---------- leaderboard ---------- */
+  aside.board{
+    margin:24px 0 4px;background:var(--paper);border:1px solid var(--line);
+    border-radius:6px;box-shadow:var(--shadow);overflow:hidden;
+  }
+  .board .bhead{background:var(--ink);color:var(--paper);padding:16px 18px;display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  .board .bhead h3{margin:0;font-size:17px;font-weight:800;letter-spacing:.5px;}
+  .board .bhead p{margin:0;font-size:11.5px;color:#cfc8b6;letter-spacing:1px;}
+  .board ul{list-style:none;margin:0;padding:6px 0;max-height:362px;overflow-y:auto;scrollbar-width:thin;}
+  .board li{display:flex;gap:14px;align-items:center;padding:12px 22px;border-bottom:1px solid var(--line);}
+  .board li:last-child{border-bottom:none;}
+  .rank{font-size:18px;font-weight:800;width:30px;flex-shrink:0;text-align:center;color:var(--ink-soft);font-variant-numeric:tabular-nums;}
+  .rank.r1{color:var(--accent);} .rank.r2{color:var(--gold);} .rank.r3{color:var(--green);}
+  .merchant{flex:1;min-width:0;}
+  .merchant .nm{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .merchant .tag{font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
+  .qty{text-align:right;flex-shrink:0;}
+  .qty .n{font-size:22px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;}
+  .qty .u{font-size:10px;color:var(--ink-soft);letter-spacing:1px;}
+  .board .bempty{padding:32px 18px;text-align:center;color:var(--ink-soft);font-size:13px;}
+
+  /* ---------- admin ---------- */
+  .admin-cat-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 14px;border:1px solid var(--line);border-radius:5px;margin-bottom:8px;}
+  .admin-cat-row .ci{min-width:0;}
+  .admin-cat-row .cn{font-weight:700;font-size:14px;}
+  .admin-cat-row .cm{font-size:12px;color:var(--ink-soft);margin-top:2px;}
+  .admin-prod-list{max-height:340px;overflow-y:auto;border:1px solid var(--line);border-radius:5px;}
+  .admin-prod-row{display:flex;align-items:center;gap:11px;padding:9px 12px;border-bottom:1px solid var(--line);}
+  .admin-prod-row:last-child{border-bottom:none;}
+  .admin-prod-row input{width:auto;flex-shrink:0;}
+  .admin-prod-row .pimg{width:42px;height:42px;border-radius:4px;background:#e0dacb;object-fit:cover;flex-shrink:0;}
+  .admin-prod-row .pinfo{flex:1;min-width:0;}
+  .admin-prod-row .pn{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .admin-prod-row .pc{font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
+  .btn.danger{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .admin-empty{padding:24px 12px;text-align:center;color:var(--ink-soft);font-size:13px;}
+
+  /* ---------- modal ---------- */
+  .mask{position:fixed;inset:0;background:rgba(29,27,22,.5);display:none;align-items:center;justify-content:center;z-index:100;padding:18px;}
+  .mask.show{display:flex;}
+  .modal{background:var(--paper);border-radius:8px;width:100%;max-width:520px;max-height:90vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+  .modal .mhead{padding:20px 24px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;}
+  .modal .mhead h3{margin:0;font-size:19px;font-weight:800;}
+  .modal .mbody{padding:22px 24px;}
+  .modal .x{background:none;font-size:24px;color:var(--ink-soft);line-height:1;padding:0 4px;}
+  label.fld{display:block;margin-bottom:16px;}
+  label.fld span{display:block;font-size:13px;font-weight:600;margin-bottom:6px;}
+  label.fld span em{color:var(--accent);font-style:normal;}
+  input,textarea,select{
+    width:100%;font-family:inherit;font-size:14px;padding:10px 12px;border:1.5px solid var(--line);
+    border-radius:4px;background:#fff;color:var(--ink);
+  }
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);}
+  textarea{resize:vertical;min-height:120px;line-height:1.6;}
+  .hint{font-size:12px;color:var(--ink-soft);margin:-8px 0 16px;line-height:1.6;}
+  .hint code{background:#ece7da;padding:1px 5px;border-radius:3px;font-size:11.5px;}
+  .seg{display:flex;gap:4px;background:#ece7da;border-radius:6px;padding:4px;margin-bottom:18px;}
+  .seg-btn{flex:1;padding:8px 12px;border-radius:4px;font-size:13px;font-weight:600;color:var(--ink-soft);background:transparent;transition:all .15s ease;}
+  .seg-btn.active{background:var(--paper);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08);}
+  .modal .mfoot{display:flex;justify-content:flex-end;gap:10px;margin-top:8px;}
+
+  .preview-prod{display:flex;gap:14px;align-items:center;background:#f1ede2;border-radius:6px;padding:12px;margin-bottom:18px;}
+  .preview-prod .pimg{width:64px;height:64px;border-radius:4px;background:#e0dacb;object-fit:cover;flex-shrink:0;}
+  .preview-prod .pt{font-size:14px;font-weight:600;}
+  .preview-prod .pc{font-size:12px;color:var(--accent);margin-top:3px;}
+
+  .toast{
+    position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--ink);color:var(--paper);padding:12px 22px;border-radius:6px;font-size:14px;
+    opacity:0;pointer-events:none;transition:all .25s ease;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.25);
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  @media(max-width:980px){
+    .layout{grid-template-columns:1fr;}
+    aside.board{position:static;}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="top-row">
+      <div class="brand">
+        <h1>新奇特项目极速选品认领台</h1>
+        <span class="sub">Novelty Selection · Fast Claim Board</span>
+      </div>
+      <div class="top-actions">
+        <div class="search-box">
+          <span class="search-ico">🔍</span>
+          <input id="searchInput" type="text" placeholder="搜索产品标题…" autocomplete="off">
+          <button class="search-clear" id="searchClear" title="清空" style="display:none">×</button>
+        </div>
+        <button class="btn" id="btnExport">⬇ 导出报名表</button>
+        <button class="btn" id="btnAdmin">🔒 管理员</button>
+        <button class="btn solid" id="btnUpload">＋ 买手上传清单</button>
+      </div>
+    </div>
+    <div class="tabs" id="tabs"></div>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- leaderboard (top, full width) -->
+  <aside class="board">
+    <div class="bhead">
+      <h3>🏆 供应商上新排行榜</h3>
+      <p>SUPPLIER LEADERBOARD · 点击商家名查看其上新 SPU 与图片</p>
+      <button class="btn tiny" id="boardToggle" style="background:transparent;border:1.5px solid #cfc8b6;color:#fff;">折叠</button>
+    </div>
+    <ul id="board"></ul>
+    <div class="bempty" id="boardEmpty">暂无上新记录，认领产品后自动统计。</div>
+  </aside>
+
+  <!-- main -->
+  <main>
+    <div class="section-head">
+      <h2 id="catTitle">全部产品</h2>
+      <span class="meta" id="catMeta"></span>
+    </div>
+    <div class="grid" id="grid"></div>
+  </main>
+</div>
+
+<!-- upload modal -->
+<div class="mask" id="uploadMask">
+  <div class="modal">
+    <div class="mhead"><h3>买手上传产品清单</h3><button class="x" data-close>×</button></div>
+    <div class="mbody">
+      <div class="seg" id="modeSeg">
+        <button class="seg-btn active" data-mode="sheet">飞书表格粘贴</button>
+        <button class="seg-btn" data-mode="simple">简易格式</button>
+        <button class="seg-btn" data-mode="single">单个上传</button>
+      </div>
+
+      <!-- sheet mode -->
+      <div id="modeSheet">
+        <p class="hint">
+          直接从飞书表格「玩具线索-新奇特」框选数据行复制，粘贴到下方（<b>Tab 分隔，自动识别列、自动跳过表头</b>）。<br>
+          识别规则：用 <b>一级类目</b> 作为标签 · <b>商品名称</b> 作为标题 · <b>商品首图url</b> 作为图片 · <b>买手打标</b> 作为图下标签（"买手精选"自动置顶）。
+        </p>
+        <label class="fld">
+          <span>粘贴表格内容 <em>*</em></span>
+          <textarea id="sheetInput" placeholder="玩具与爱好	积木拼插玩具	拼插积木	超大号恐龙蛋拼装玩具	https://...www800-800
+玩具与爱好	户外运动玩具	球类玩具	儿童发光弹力球	https://...www1170-1170"></textarea>
+        </label>
+      </div>
+
+      <!-- simple mode -->
+      <div id="modeSimple" style="display:none">
+        <p class="hint">
+          每行一个产品，<b>必须使用英文竖线 <code>|</code> 分隔</b>字段，顺序为：<br>
+          <code>类目 | 产品标题 | 图片URL(可选)</code><br>
+          例如：<code>玩具与爱好 | 拼装积木套装 | https://...jpg</code>
+        </p>
+        <label class="fld">
+          <span>产品清单 <em>*</em></span>
+          <textarea id="bulkInput" placeholder="积木拼插玩具 | 超大号恐龙蛋拼装玩具 | https://picsum.photos/seed/toy/400
+户外运动玩具 | 儿童发光弹力球"></textarea>
+        </label>
+      </div>
+
+      <!-- single mode -->
+      <div id="modeSingle" style="display:none">
+        <p class="hint">
+          一次上传一个产品。<b>商品首图</b>支持直接 <b>Ctrl/⌘+V 粘贴图片</b>（截图或复制的图片），也可粘贴图片 URL。
+        </p>
+        <label class="fld">
+          <span>一级类目 <em>*</em></span>
+          <input id="sgCat" placeholder="如：玩具与爱好" autocomplete="off">
+        </label>
+        <label class="fld">
+          <span>商品标题 <em>*</em></span>
+          <input id="sgTitle" placeholder="如：超大号恐龙蛋拼装玩具" autocomplete="off">
+        </label>
+        <label class="fld">
+          <span>商品首图 <em>*</em></span>
+          <div id="sgImgDrop" tabindex="0"
+            style="border:1.5px dashed var(--line);border-radius:6px;padding:18px;text-align:center;color:var(--ink-soft);font-size:13px;cursor:pointer;background:#fff;">
+            点此后按 <b>Ctrl/⌘+V 粘贴图片</b>，或把图片 URL 粘贴到下方输入框
+          </div>
+          <div id="sgImgPreview" style="display:none;margin-top:10px;">
+            <img id="sgImgPreviewImg" style="max-width:100%;max-height:200px;border-radius:6px;border:1px solid var(--line);" alt="">
+            <button class="btn ghost tiny" id="sgImgClear" style="margin-top:8px;">移除图片</button>
+          </div>
+        </label>
+        <label class="fld">
+          <span>或填图片 URL</span>
+          <input id="sgImgUrl" placeholder="https://...jpg（与粘贴图片二选一）" autocomplete="off">
+        </label>
+        <label class="fld">
+          <span>买手打标（可选）</span>
+          <input id="sgTag" placeholder='如：买手精选（含"精选"将自动置顶）' autocomplete="off">
+        </label>
+      </div>
+
+      <div class="mfoot">
+        <button class="btn" data-close>取消</button>
+        <button class="btn solid" id="btnParse">解析并发布</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- claim modal -->
+<div class="mask" id="claimMask">
+  <div class="modal">
+    <div class="mhead"><h3>商家认领 · 填写信息</h3><button class="x" data-close>×</button></div>
+    <div class="mbody">
+      <div class="preview-prod" id="claimPreview"></div>
+      <label class="fld">
+        <span>SPU 编号 <em>*</em></span>
+        <input id="cSpu" placeholder="如：S251019042240，多个 SPU 用空格隔开">
+      </label>
+      <p class="hint" style="margin:-10px 0 16px">
+        SPU 格式：字母 <code>S</code> + 数字（如 <code>S251019042240</code>）。<b>可一次填写多个，用空格隔开</b>；格式错误或留空将提交失败、不予计入。
+      </p>
+      <label class="fld">
+        <span>供应商名称 <em>*</em></span>
+        <input id="cSupplier" placeholder="如：宁波家居制造有限公司">
+      </label>
+      <div class="mfoot">
+        <button class="btn" data-close>取消</button>
+        <button class="btn solid" id="btnClaim">确认提交</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- view claims modal -->
+<div class="mask" id="viewMask">
+  <div class="modal">
+    <div class="mhead"><h3>已报名商家名单</h3><button class="x" data-close>×</button></div>
+    <div class="mbody">
+      <div class="preview-prod" id="viewPreview"></div>
+      <div id="viewList"></div>
+      <div class="mfoot">
+        <button class="btn solid" data-close>关闭</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- confirm / progress modal (自定义确认 + 进度 + 结果) -->
+<div class="mask" id="confirmMask" style="z-index:300">
+  <div class="modal" style="max-width:440px">
+    <div class="mhead"><h3 id="confirmTitle">确认操作</h3><button class="x" id="confirmX">×</button></div>
+    <div class="mbody">
+      <p id="confirmMsg" style="font-size:14px;line-height:1.7;margin:0 0 18px;color:var(--ink);"></p>
+      <!-- 进度区，确认后显示 -->
+      <div id="confirmProgWrap" style="display:none;margin:6px 0 18px;">
+        <div style="height:12px;background:#ece7da;border-radius:999px;overflow:hidden;">
+          <div id="confirmProgBar" style="height:100%;width:0%;background:var(--accent);transition:width .25s ease;border-radius:999px;"></div>
+        </div>
+        <div id="confirmProgText" style="font-size:12.5px;color:var(--ink-soft);margin-top:8px;text-align:center;">准备中…</div>
+      </div>
+      <div class="mfoot" id="confirmFoot">
+        <button class="btn" id="confirmCancel">取消</button>
+        <button class="btn solid" id="confirmOk" style="background:var(--accent);border-color:var(--accent)">确认删除</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- supplier detail modal -->
+<div class="mask" id="supplierMask">
+  <div class="modal">
+    <div class="mhead"><h3 id="supplierTitle">商家上新明细</h3><button class="x" data-close>×</button></div>
+    <div class="mbody">
+      <div id="supplierList"></div>
+      <div class="mfoot">
+        <button class="btn solid" data-close>关闭</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- buyer (upload) login modal -->
+<div class="mask" id="buyerLoginMask">
+  <div class="modal">
+    <div class="mhead"><h3>🔑 买手登录</h3><button class="x" data-close>×</button></div>
+    <div class="mbody">
+      <p class="hint">上传产品清单需买手账号权限，登录后即可发布商品（所有用户可见）。</p>
+      <label class="fld">
+        <span>账号 <em>*</em></span>
+        <input id="bUser" autocomplete="off" placeholder="请输入买手账号">
+      </label>
+      <label class="fld">
+        <span>密码 <em>*</em></span>
+        <input id="bPwd" type="password" autocomplete="off" placeholder="请输入买手密码">
+      </label>
+      <div class="mfoot">
+        <button class="btn" data-close>取消</button>
+        <button class="btn solid" id="btnBuyerLogin">登录</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- admin login modal -->
+<div class="mask" id="adminLoginMask">
+  <div class="modal">
+    <div class="mhead"><h3>🔒 管理员登录</h3><button class="x" data-close>×</button></div>
+    <div class="mbody">
+      <label class="fld">
+        <span>账号 <em>*</em></span>
+        <input id="aUser" autocomplete="off" placeholder="请输入管理员账号">
+      </label>
+      <label class="fld">
+        <span>密码 <em>*</em></span>
+        <input id="aPwd" type="password" autocomplete="off" placeholder="请输入管理员密码">
+      </label>
+      <div class="mfoot">
+        <button class="btn" data-close>取消</button>
+        <button class="btn solid" id="btnAdminLogin">登录</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- admin panel modal -->
+<div class="mask" id="adminPanelMask">
+  <div class="modal" style="max-width:680px">
+    <div class="mhead"><h3>🛠 管理员后台 · 删除商品</h3><button class="x" data-close>×</button></div>
+    <div class="mbody">
+      <div class="seg" id="adminSeg">
+        <button class="seg-btn active" data-amode="cat">按类目删除</button>
+        <button class="seg-btn" data-amode="prod">按产品删除</button>
+        <button class="seg-btn" data-amode="time">按上传时间删除</button>
+      </div>
+
+      <!-- by category -->
+      <div id="adminCat">
+        <p class="hint">删除某个一级类目下的<b>全部商品</b>（含其报名记录），操作不可恢复。</p>
+        <div id="adminCatList"></div>
+      </div>
+
+      <!-- by product -->
+      <div id="adminProd" style="display:none">
+        <p class="hint">勾选要删除的商品，可多选；支持按标题搜索。删除后该商品及其报名记录一并移除。</p>
+        <input id="adminProdSearch" placeholder="🔍 按标题搜索…" style="margin-bottom:12px" autocomplete="off">
+        <div id="adminProdList" class="admin-prod-list"></div>
+        <div class="mfoot" style="justify-content:space-between;align-items:center">
+          <label style="font-size:13px;display:flex;align-items:center;gap:6px;width:auto;margin:0">
+            <input type="checkbox" id="adminSelAll" style="width:auto"> 全选当前结果
+          </label>
+          <button class="btn solid" id="btnDelProds" style="background:var(--accent);border-color:var(--accent)">删除所选商品</button>
+        </div>
+      </div>
+
+      <!-- by upload time -->
+      <div id="adminTime" style="display:none">
+        <p class="hint">按<b>上传日期时间（精确到分钟）</b>批量删除线索。设置时间范围后，落在区间内（含端点）上传的商品及其报名记录将被删除，操作不可恢复。</p>
+        <label class="fld">
+          <span>开始时间</span>
+          <input id="adminTimeStart" type="datetime-local">
+        </label>
+        <label class="fld">
+          <span>结束时间</span>
+          <input id="adminTimeEnd" type="datetime-local">
+        </label>
+        <p class="hint" style="margin:-6px 0 12px">只填开始时间 = 删除该时间之后上传的；只填结束时间 = 删除该时间之前上传的。</p>
+        <div id="adminTimePreview" class="admin-empty">设置时间范围后，这里显示将被删除的商品。</div>
+        <div class="mfoot">
+          <button class="btn solid" id="btnDelByTime" style="background:var(--accent);border-color:var(--accent)">删除该时间范围内的商品</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const LS_KEY = "buyer_selection_board_v1";   // 本地缓存（离线兜底）
+const FAV_KEY = "buyer_selection_favs_v1";   // 个人收藏（仅本地）
+/* ===== 云端数据源：Supabase（免费 Postgres + 自带 REST API）=====
+ * 所有用户读写同一份云端数据。下面两项来自你的 Supabase 项目：
+ *   Project URL（Settings → API → Project URL）
+ *   anon public key（Settings → API → Project API keys → anon public）
+ * anon key 设计上即可安全放在前端，数据权限由数据库的 RLS 策略控制。 */
+const SUPABASE_URL = "https://kotqnlsceuuisydmaqke.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtvdHFubHNjZXV1aXN5ZG1hcWtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3NTE3NzQsImV4cCI6MjA5NzMyNzc3NH0.jMNLwxuqroByD0_lrhOI0zzNb4F8CtI85GVkyTM10Lk";
+const SB_REST = SUPABASE_URL + "/rest/v1";
+function cloudReady(){ return /^https?:\/\//.test(SUPABASE_URL) && !!SUPABASE_KEY && !/REPLACE/.test(SUPABASE_KEY); }
+const SB_HEADERS = {
+  "apikey": SUPABASE_KEY,
+  "Authorization": "Bearer " + SUPABASE_KEY,
+  "Content-Type": "application/json",
+};
+let state = { products: [] };   // each: {id,cat,title,img,tag,claims:[{spu,supplier,at}]}
+let favs = [];                  // 收藏的产品 id 列表
+let activeCat = "__all__";
+let claimingId = null;
+let searchQuery = "";           // 产品标题搜索关键词
+
+/* ---------- persistence ---------- */
+function normalize(products){
+  if(!Array.isArray(products)) products=[];
+  products.forEach(p=>{
+    if(!Array.isArray(p.claims)) p.claims = p.claimed ? [p.claimed] : [];
+    delete p.claimed;
+  });
+  return products;
+}
+function cacheLocal(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){} }
+
+/* Supabase REST 通用请求：自动带鉴权头，校验 HTTP 状态 */
+async function sb(path, opts){
+  opts = opts || {};
+  const r = await fetch(SB_REST + path, {
+    method: opts.method || "GET",
+    headers: Object.assign({}, SB_HEADERS, opts.headers||{}),
+    body: opts.body!=null ? JSON.stringify(opts.body) : undefined,
+    cache: "no-store",
+  });
+  if(!r.ok){
+    let msg = "";
+    try{ const j = await r.json(); msg = j.message || j.error || JSON.stringify(j); }catch(e){ msg = await r.text().catch(()=> ""); }
+    throw new Error("Supabase " + r.status + (msg?("："+msg):""));
+  }
+  if(r.status===204) return null;
+  return r.json().catch(()=>null);
+}
+
+/* 分页拉取整张表：Supabase/PostgREST 单次最多返回 1000 行，
+ * 用 Range 头按 1000 行一页循环，直到取完所有记录（解决 >1000 条只显示 1000 条的问题）*/
+async function sbFetchAll(table){
+  const PAGE = 1000;
+  let from = 0, out = [];
+  for(;;){
+    const r = await fetch(SB_REST + "/" + table + "?select=*", {
+      method: "GET",
+      headers: Object.assign({}, SB_HEADERS, { "Range-Unit": "items", "Range": from + "-" + (from + PAGE - 1) }),
+      cache: "no-store",
+    });
+    if(!r.ok && r.status!==206){
+      let msg=""; try{ const j=await r.json(); msg=j.message||j.error||JSON.stringify(j);}catch(e){ msg=await r.text().catch(()=> ""); }
+      throw new Error("Supabase " + r.status + (msg?("："+msg):""));
+    }
+    const rows = await r.json().catch(()=>[]);
+    out = out.concat(rows||[]);
+    if(!rows || rows.length < PAGE) break;   // 最后一页
+    from += PAGE;
+    if(from > 200000) break;                 // 安全上限，避免异常死循环
+  }
+  return out;
+}
+
+/* 从云端拉取最新产品数据：读 products + claims 两张表（全量分页），按 product_id join 成前端结构 */
+async function cloudFetch(){
+  const [prodRows, claimRows] = await Promise.all([
+    sbFetchAll("products"),
+    sbFetchAll("claims"),
+  ]);
+  const claimsByPid = {};
+  (claimRows||[]).forEach(c=>{
+    const pid = c.product_id==null ? "" : String(c.product_id);
+    (claimsByPid[pid] = claimsByPid[pid] || []).push({
+      spu: c.spu||"", supplier: c.supplier||"", at: c.at||0,
+    });
+  });
+  const products = (prodRows||[]).map(p=>({
+    id: String(p.id),
+    cat: p.cat||"", cat2: p.cat2||"", cat3: p.cat3||"",
+    title: p.title||"", img: p.img||"", tag: p.tag||"",
+    at: p.at||0, claims: claimsByPid[String(p.id)] || [],
+  }));
+  return normalize(products);
+}
+
+/* 初次加载：先用本地缓存秒出，再拉云端覆盖 */
+function loadLocalCache(){
+  try{ const r = localStorage.getItem(LS_KEY); if(r){ const s=JSON.parse(r); state={products:normalize(s.products||[])}; } }catch(e){}
+  try{ const f = localStorage.getItem(FAV_KEY); if(f) favs = JSON.parse(f)||[]; }catch(e){}
+  if(!Array.isArray(favs)) favs=[];
+}
+async function loadCloud(){
+  if(!cloudReady()){ toast("尚未配置云端地址（Supabase），当前仅本地预览"); return; }
+  try{
+    const products = await cloudFetch();
+    state.products = products;
+    cacheLocal();
+    renderAll();
+  }catch(e){
+    toast("云端数据加载失败，当前为本地缓存");
+  }
+}
+
+/* 把前端写操作（action）翻译成对 Supabase 的 REST 调用 */
+async function cloudMutate(action){
+  if(action.action==="addProducts"){
+    const records = (action.products||[]).map(p=>({
+      id: String(p.id), title: p.title||"", cat: p.cat||"", cat2: p.cat2||"", cat3: p.cat3||"",
+      img: p.img||"", tag: p.tag||"", at: p.at||Date.now(),
+    }));
+    if(records.length) await sb("/products", {method:"POST", body:records});
+    return;
+  }
+  if(action.action==="addClaims"){
+    const records = (action.claims||[]).map(c=>({
+      product_id: String(action.productId||""), spu: c.spu||"", supplier: c.supplier||"",
+      title: action.title||"", cat: action.cat||"", at: Date.now(),
+    }));
+    if(records.length) await sb("/claims", {method:"POST", body:records});
+    return;
+  }
+  if(action.action==="deleteProducts"){
+    const ids = (action.ids||[]).map(String);
+    if(!ids.length) return;
+    // 分批删除，避免 ID 过多导致请求 URL 超长被拒（每批 80 个）
+    const CHUNK = 80;
+    for(let i=0;i<ids.length;i+=CHUNK){
+      const part = ids.slice(i,i+CHUNK);
+      const inList = "(" + part.map(encodeURIComponent).join(",") + ")";
+      await sb("/claims?product_id=in." + inList, {method:"DELETE"});
+      await sb("/products?id=in." + inList, {method:"DELETE"});
+    }
+    return;
+  }
+  if(action.action==="deleteCategory"){
+    const cat = action.cat||"";
+    // 直接在服务端按类目名删除，不枚举商品 ID（避免类目下商品过多时 URL 超长失败）。
+    // claims 表存有 cat 字段，可直接按类目删其报名记录。
+    await sb("/claims?cat=eq." + encodeURIComponent(cat), {method:"DELETE"});
+    await sb("/products?cat=eq." + encodeURIComponent(cat), {method:"DELETE"});
+    return;
+  }
+  throw new Error("未知操作："+action.action);
+}
+
+/* 写操作统一入口：发起云端动作 → 成功后重新拉取最新数据并渲染。
+ * action：写操作描述对象；okMsg：成功提示 */
+let _saving=false;
+async function applyMutation(action, okMsg){
+  if(_saving){ toast("操作处理中，请稍候…"); return; }
+  if(!cloudReady()){ toast("尚未配置云端地址（Supabase），无法保存"); return; }
+  _saving=true;
+  try{
+    await cloudMutate(action);
+    const products = await cloudFetch();
+    state.products = products;
+    cacheLocal();
+    renderAll();
+    if(okMsg) toast(okMsg);
+  }catch(e){
+    toast("云端保存失败："+(e&&e.message||"请检查网络后重试"));
+  }finally{ _saving=false; }
+}
+
+function saveFavs(){ try{ localStorage.setItem(FAV_KEY, JSON.stringify(favs)); }catch(e){} }
+function isFav(id){ return favs.indexOf(id)>=0; }
+function toggleFav(id){
+  const i = favs.indexOf(id);
+  if(i>=0){ favs.splice(i,1); toast("已取消收藏"); }
+  else{ favs.push(id); toast("已加入我的收藏"); }
+  saveFavs(); renderTabs(); renderGrid();
+}
+
+/* 将一行拆成字段：只按竖线分隔，兼容全角｜，避免空格/逗号造成的类目误判 */
+function splitLine(line){
+  return line.replace(/｜/g,"|").split("|");
+}
+
+/* ---------- helpers ---------- */
+function cats(){
+  const m = {};
+  state.products.forEach(p=>{ m[p.cat]=(m[p.cat]||0)+1; });
+  return m;
+}
+function esc(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),2200);}
+
+/* ---------- 自定义确认 + 进度 + 结果弹窗 ----------
+ * confirmTask({title,message,run}):
+ *   - 弹出确认框；点「取消」→ 关闭、任务取消（run 不执行）
+ *   - 点「确认删除」→ 显示进度条，调用 run(progress) 执行任务
+ *   - run 可调用 progress(done,total,text) 更新进度；完成后显示结果与「完成」按钮
+ */
+let _confirmBusy=false;
+function confirmTask(opts){
+  if(_confirmBusy){ toast("有任务正在处理中，请稍候…"); return; }
+  const mask=document.getElementById("confirmMask");
+  const title=document.getElementById("confirmTitle");
+  const msg=document.getElementById("confirmMsg");
+  const foot=document.getElementById("confirmFoot");
+  const wrap=document.getElementById("confirmProgWrap");
+  const bar=document.getElementById("confirmProgBar");
+  const ptext=document.getElementById("confirmProgText");
+  const btnOk=document.getElementById("confirmOk");
+  const btnCancel=document.getElementById("confirmCancel");
+  const btnX=document.getElementById("confirmX");
+
+  title.textContent=opts.title||"确认操作";
+  msg.textContent=opts.message||"";
+  wrap.style.display="none";
+  bar.style.width="0%";
+  ptext.textContent="准备中…";
+  // 还原按钮区到「取消 / 确认删除」
+  foot.innerHTML="";
+  const cCancel=document.createElement("button"); cCancel.className="btn"; cCancel.textContent="取消";
+  const cOk=document.createElement("button"); cOk.className="btn solid"; cOk.style.background="var(--accent)"; cOk.style.borderColor="var(--accent)"; cOk.textContent="确认删除";
+  foot.appendChild(cCancel); foot.appendChild(cOk);
+  mask.classList.add("show");
+
+  function closeIt(){ mask.classList.remove("show"); }
+  function setProgress(done,total,text){
+    const pct = total>0 ? Math.round(done/total*100) : 0;
+    bar.style.width = pct + "%";
+    ptext.textContent = text || `正在删除… ${done}/${total}（${pct}%）`;
+  }
+  cCancel.onclick=()=>{ closeIt(); toast("已取消，未做任何删除"); };
+  btnX.onclick=()=>{ if(!_confirmBusy){ closeIt(); toast("已取消，未做任何删除"); } };
+
+  cOk.onclick=async ()=>{
+    _confirmBusy=true;
+    wrap.style.display="block";
+    setProgress(0, 1, "正在删除，请勿关闭…");
+    // 进入执行态：隐藏「取消」，确认按钮转为「处理中」禁用
+    foot.innerHTML="";
+    const running=document.createElement("button"); running.className="btn solid"; running.textContent="处理中…"; running.disabled=true; running.style.opacity=".7";
+    foot.appendChild(running);
+    try{
+      await opts.run(setProgress);
+      bar.style.width="100%";
+      ptext.textContent="删除完成 ✅";
+      // 结果态：显示「完成」按钮
+      foot.innerHTML="";
+      const done=document.createElement("button"); done.className="btn solid"; done.textContent="完成";
+      done.onclick=()=>closeIt();
+      foot.appendChild(done);
+      if(opts.okMsg) toast(opts.okMsg);
+    }catch(e){
+      ptext.textContent="删除失败：" + ((e&&e.message)||"请检查网络后重试");
+      bar.style.background="var(--ink-soft)";
+      foot.innerHTML="";
+      const close=document.createElement("button"); close.className="btn"; close.textContent="关闭"; close.onclick=()=>{ bar.style.background="var(--accent)"; closeIt(); };
+      foot.appendChild(close);
+    }finally{
+      _confirmBusy=false;
+    }
+  };
+}
+
+/* 删除指定商品 ID 列表（分批，带进度回调）— 直连 Supabase */
+async function deleteProductsByIds(ids, onProgress){
+  ids=(ids||[]).map(String);
+  const total=ids.length;
+  if(!total) return;
+  const CHUNK=80;
+  let done=0;
+  for(let i=0;i<ids.length;i+=CHUNK){
+    const part=ids.slice(i,i+CHUNK);
+    const inList="(" + part.map(encodeURIComponent).join(",") + ")";
+    await sb("/claims?product_id=in." + inList, {method:"DELETE"});
+    await sb("/products?id=in." + inList, {method:"DELETE"});
+    done+=part.length;
+    if(onProgress) onProgress(done, total);
+  }
+}
+/* 按类目删除（服务端直接按类目名删，带两步进度）— 直连 Supabase */
+async function deleteByCategory(cat, onProgress){
+  if(onProgress) onProgress(0,2,"正在删除报名记录…");
+  await sb("/claims?cat=eq." + encodeURIComponent(cat), {method:"DELETE"});
+  if(onProgress) onProgress(1,2,"正在删除商品…");
+  await sb("/products?cat=eq." + encodeURIComponent(cat), {method:"DELETE"});
+  if(onProgress) onProgress(2,2,"清理完成…");
+}
+/* 删除后刷新数据并重渲染 */
+async function refreshAfterDelete(){
+  const products=await cloudFetch();
+  state.products=products;
+  cacheLocal();
+  renderAll();
+}
+
+/* ---------- render ---------- */
+function renderTabs(){
+  const map = cats();
+  const total = state.products.length;
+  const el = document.getElementById("tabs");
+  let html = `<button class="tab tab-fav ${activeCat==='__fav__'?'active':''}" data-cat="__fav__">❤ 我的收藏 <span class="cnt">${favs.length}</span></button>`;
+  html += `<button class="tab ${activeCat==='__all__'?'active':''}" data-cat="__all__">全部 <span class="cnt">${total}</span></button>`;
+  Object.keys(map).sort((a,b)=>map[b]-map[a]).forEach(c=>{
+    html += `<button class="tab ${activeCat===c?'active':''}" data-cat="${esc(c)}">${esc(c)} <span class="cnt">${map[c]}</span></button>`;
+  });
+  el.innerHTML = html;
+  el.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{
+    activeCat=b.dataset.cat;
+    if(searchQuery){ searchQuery=""; const si=document.getElementById("searchInput"); if(si)si.value=""; const sc=document.getElementById("searchClear"); if(sc)sc.style.display="none"; }
+    renderTabs();renderGrid();
+  });
+}
+
+function isPick(p){ return /精选/.test(p.tag||""); }   // 买手精选品优先
+
+function renderGrid(){
+  const grid = document.getElementById("grid");
+  const favView = activeCat==="__fav__";
+  const q = searchQuery.trim().toLowerCase();
+  const searching = q.length>0;
+  // 有搜索词时跨全部产品搜索标题；否则按当前标签/收藏筛选
+  const list = state.products
+    .filter(p=> searching
+      ? (p.title||"").toLowerCase().indexOf(q)>=0
+      : (favView ? isFav(p.id) : (activeCat==="__all__"||p.cat===activeCat)))
+    .slice().sort((a,b)=>(isPick(b)?1:0)-(isPick(a)?1:0));   // 买手精选品排在前面
+  document.getElementById("catTitle").textContent = searching
+    ? `搜索：“${searchQuery.trim()}”`
+    : (favView?"我的收藏":(activeCat==="__all__"?"全部产品":activeCat));
+  const claimedN = list.filter(p=>p.claims&&p.claims.length).length;
+  const pickN = list.filter(isPick).length;
+  document.getElementById("catMeta").textContent = searching
+    ? `命中 ${list.length} 款 · 买手精选 ${pickN} 款 · 已有报名 ${claimedN} 款`
+    : `共 ${list.length} 款 · 买手精选 ${pickN} 款 · 已有报名 ${claimedN} 款`;
+
+  if(!list.length){
+    grid.innerHTML = searching
+      ? `<div class="empty"><h3>未找到匹配的产品</h3><p>没有标题包含「${esc(searchQuery.trim())}」的产品，换个关键词试试。</p></div>`
+      : (favView
+        ? `<div class="empty"><h3>还没有收藏的产品</h3><p>在产品图片上点击 ♡ 收藏按钮，收藏的产品会出现在这里。</p></div>`
+        : `<div class="empty"><h3>还没有产品</h3><p>点击右上角「＋ 买手上传清单」上传产品后，将自动按类目生成标签。</p></div>`);
+    return;
+  }
+  grid.innerHTML = list.map(p=>{
+    const img = p.img ? `<img src="${esc(p.img)}" alt="" onerror="this.parentNode.innerHTML='<span class=\\'noimg\\'>无图片</span>'">` : `<span class="noimg">无图片</span>`;
+    const corner = isPick(p) ? `<span class="pick-corner">⭐ 买手精选</span>` : ``;
+    const favBtn = `<button class="fav-btn${isFav(p.id)?' on':''}" data-fav="${p.id}" title="${isFav(p.id)?'取消收藏':'收藏'}">${isFav(p.id)?'❤':'♡'}</button>`;
+    const tagBadge = p.tag
+      ? `<span class="mark-tag ${isPick(p)?'mark-pick':'mark-normal'}">${isPick(p)?'⭐ ':''}${esc(p.tag)}</span>`
+      : ``;
+    const n = (p.claims&&p.claims.length)||0;
+    const action = `<div class="card-actions">
+        <button class="btn solid claim" data-claim="${p.id}">认领并填写</button>
+        <button class="btn ghost view" data-view="${p.id}">查看报名商家${n?` (${n})`:''}</button>
+      </div>`;
+    return `<article class="card${isPick(p)?' card-pick':''}">
+      <div class="ph">${corner}${favBtn}${img}</div>
+      <div class="body">
+        ${tagBadge}
+        <span class="cat-pill">${esc(p.cat)}</span>
+        <div class="title">${esc(p.title)}</div>
+        ${action}
+      </div>
+    </article>`;
+  }).join("");
+  grid.querySelectorAll("[data-claim]").forEach(b=>b.onclick=()=>openClaim(b.dataset.claim));
+  grid.querySelectorAll("[data-view]").forEach(b=>b.onclick=()=>openView(b.dataset.view));
+  grid.querySelectorAll("[data-fav]").forEach(b=>b.onclick=()=>toggleFav(b.dataset.fav));
+}
+
+function renderBoard(){
+  const m = {};
+  state.products.forEach(p=>{
+    (p.claims||[]).forEach(c=>{
+      const name = c.supplier;
+      if(!name) return;
+      if(!m[name]) m[name]={n:0,cats:{}};
+      m[name].n++;
+      m[name].cats[p.cat]=(m[name].cats[p.cat]||0)+1;
+    });
+  });
+  const rows = Object.keys(m).map(name=>{
+    const topCat = Object.keys(m[name].cats).sort((a,b)=>m[name].cats[b]-m[name].cats[a])[0];
+    return {name,n:m[name].n,topCat};
+  }).sort((a,b)=>b.n-a.n);
+
+  const ul = document.getElementById("board");
+  const empty = document.getElementById("boardEmpty");
+  if(!rows.length){ ul.innerHTML=""; empty.style.display="block"; return; }
+  empty.style.display="none";
+  ul.innerHTML = rows.map((r,i)=>`
+    <li>
+      <span class="rank ${i<3?'r'+(i+1):''}">${i+1}</span>
+      <div class="merchant" style="cursor:pointer" data-supplier="${esc(r.name)}" title="点击查看 ${esc(r.name)} 的上新明细">
+        <div class="nm">${esc(r.name)} <span style="font-size:11px;color:var(--accent)">查看明细 ›</span></div>
+        <div class="tag">主营类目 · ${esc(r.topCat)}</div>
+      </div>
+      <div class="qty"><div class="n">${r.n}</div><div class="u">款上新</div></div>
+    </li>`).join("");
+  ul.querySelectorAll("[data-supplier]").forEach(el=>el.onclick=()=>openSupplier(el.dataset.supplier));
+}
+
+/* 打开某商家的上新明细：列出其所有报名的 SPU、商品标题与图片 */
+function openSupplier(name){
+  const items=[];
+  state.products.forEach(p=>{
+    (p.claims||[]).forEach(c=>{
+      if(c.supplier!==name) return;
+      (c.spu||"").split(/\s+/).filter(Boolean).forEach(spu=>{
+        items.push({spu, title:p.title||"", cat:p.cat||"", img:p.img||"", at:c.at||0});
+      });
+    });
+  });
+  document.getElementById("supplierTitle").textContent = `${name} · 上新明细`;
+  const box=document.getElementById("supplierList");
+  if(!items.length){
+    box.innerHTML=`<div class="view-empty">该商家暂无上新记录。</div>`;
+  }else{
+    items.sort((a,b)=>(b.at||0)-(a.at||0));
+    box.innerHTML = `<div class="view-count">共 <b>${items.length}</b> 个 SPU 上新</div>` + items.map((it,i)=>{
+      const img=it.img?`<img class="pimg" src="${esc(it.img)}" onerror="this.style.visibility='hidden'">`:`<div class="pimg"></div>`;
+      return `<div class="admin-prod-row">
+        ${img}
+        <div class="pinfo">
+          <div class="pn">${esc(it.title)}</div>
+          <div class="pc">SPU：${esc(it.spu)} · ${esc(it.cat)}${it.at?` · ${fmtDate(it.at)}`:""}</div>
+        </div>
+      </div>`;
+    }).join("");
+  }
+  openMask("supplierMask");
+}
+
+function renderAll(){renderTabs();renderGrid();renderBoard();}
+
+/* ---------- modals ---------- */
+function openMask(id){document.getElementById(id).classList.add("show");}
+function closeMask(){document.querySelectorAll(".mask").forEach(m=>m.classList.remove("show"));}
+document.querySelectorAll("[data-close]").forEach(b=>b.onclick=closeMask);
+document.querySelectorAll(".mask").forEach(m=>{
+  if(m.id==="confirmMask") return; // 确认弹窗独立管理，点背景不关闭、不连带关后台
+  m.onclick=e=>{if(e.target===m)closeMask();};
+});
+
+/* 买手登录后才能上传清单 */
+const BUYER_USER="fsbuyer", BUYER_PWD="fsbuyer666";
+let isBuyer=false;
+document.getElementById("btnUpload").onclick=()=>{
+  if(isBuyer){ openMask("uploadMask"); return; }
+  document.getElementById("bUser").value="";
+  document.getElementById("bPwd").value="";
+  openMask("buyerLoginMask");
+};
+document.getElementById("btnBuyerLogin").onclick=()=>{
+  const u=document.getElementById("bUser").value.trim();
+  const p=document.getElementById("bPwd").value;
+  if(u===BUYER_USER && p===BUYER_PWD){
+    isBuyer=true; closeMask(); toast("买手登录成功"); openMask("uploadMask");
+  }else{
+    toast("账号或密码错误");
+  }
+};
+document.getElementById("bPwd").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("btnBuyerLogin").click();});
+
+/* 一键导出商家报名表（SPU / 商家名称 / 上传日期 / 商品标题 / 一级类目） */
+function fmtDate(ts){
+  if(!ts) return "";
+  const d=new Date(ts);
+  const p=n=>String(n).padStart(2,"0");
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function csvCell(s){ s=(s==null?"":String(s)); return /[",\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:s; }
+document.getElementById("btnExport").onclick=()=>{
+  const headers=["SPU编号","商家名称","上传日期","商品标题","一级类目"];
+  const rows=[];
+  state.products.forEach(p=>{
+    (p.claims||[]).forEach(c=>{
+      // 一条报名可能含多个 SPU（空格分隔），逐个拆成单独行
+      (c.spu||"").split(/\s+/).filter(Boolean).forEach(spu=>{
+        rows.push([spu,c.supplier||"",fmtDate(c.at),p.title||"",p.cat||""]);
+      });
+    });
+  });
+  if(!rows.length){toast("暂无商家报名数据可导出");return;}
+  const csv=[headers,...rows].map(r=>r.map(csvCell).join(",")).join("\r\n");
+  const blob=new Blob(["﻿"+csv],{type:"text/csv;charset=utf-8;"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  const d=new Date(),p=n=>String(n).padStart(2,"0");
+  a.href=url; a.download=`商家报名表_${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  toast(`已导出 ${rows.length} 条报名记录`);
+};
+
+/* ---------- 管理员 ---------- */
+const ADMIN_USER="guanlifs", ADMIN_PWD="guanlifs666";
+let isAdmin=false, adminMode="cat";
+document.getElementById("btnAdmin").onclick=()=>{
+  if(isAdmin){ openAdminPanel(); return; }
+  document.getElementById("aUser").value="";
+  document.getElementById("aPwd").value="";
+  openMask("adminLoginMask");
+};
+document.getElementById("btnAdminLogin").onclick=()=>{
+  const u=document.getElementById("aUser").value.trim();
+  const p=document.getElementById("aPwd").value;
+  if(u===ADMIN_USER && p===ADMIN_PWD){
+    isAdmin=true; closeMask(); toast("管理员登录成功"); openAdminPanel();
+  }else{
+    toast("账号或密码错误");
+  }
+};
+document.getElementById("aPwd").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("btnAdminLogin").click();});
+
+function openAdminPanel(){ renderAdmin(); openMask("adminPanelMask"); }
+
+document.querySelectorAll("#adminSeg .seg-btn").forEach(b=>b.onclick=()=>{
+  adminMode=b.dataset.amode;
+  document.querySelectorAll("#adminSeg .seg-btn").forEach(x=>x.classList.toggle("active",x===b));
+  document.getElementById("adminCat").style.display = adminMode==="cat"?"block":"none";
+  document.getElementById("adminProd").style.display = adminMode==="prod"?"block":"none";
+  document.getElementById("adminTime").style.display = adminMode==="time"?"block":"none";
+});
+
+function renderAdmin(){ renderAdminCat(); renderAdminProd(); renderAdminTime(); }
+
+/* ---- 按上传时间删除 ---- */
+// datetime-local 字符串（本地时区）转毫秒；end 自动补到该分钟的 59.999 秒
+function dtLocalToMs(v, isEnd){
+  if(!v) return null;
+  const ms = new Date(v).getTime();
+  if(isNaN(ms)) return null;
+  return isEnd ? ms + 59999 : ms;
+}
+function timeMatchedProducts(){
+  const s = dtLocalToMs(document.getElementById("adminTimeStart").value, false);
+  const e = dtLocalToMs(document.getElementById("adminTimeEnd").value, true);
+  if(s==null && e==null) return null;   // 未设置
+  return state.products.filter(p=>{
+    const at = p.at||0;
+    if(!at) return false;
+    if(s!=null && at < s) return false;
+    if(e!=null && at > e) return false;
+    return true;
+  });
+}
+function renderAdminTime(){
+  const box=document.getElementById("adminTimePreview");
+  const matched=timeMatchedProducts();
+  if(matched==null){ box.className="admin-empty"; box.innerHTML="设置时间范围后，这里显示将被删除的商品。"; return; }
+  if(!matched.length){ box.className="admin-empty"; box.innerHTML="该时间范围内没有商品。"; return; }
+  box.className="admin-prod-list";
+  box.innerHTML = `<div style="padding:9px 12px;font-size:12.5px;color:var(--ink-soft);border-bottom:1px solid var(--line)">将删除 <b style="color:var(--accent)">${matched.length}</b> 款商品：</div>` +
+    matched.slice().sort((a,b)=>(b.at||0)-(a.at||0)).map(p=>{
+      const img=p.img?`<img class="pimg" src="${esc(p.img)}" onerror="this.style.visibility='hidden'">`:`<div class="pimg"></div>`;
+      const n=(p.claims&&p.claims.length)||0;
+      return `<div class="admin-prod-row">
+        ${img}
+        <div class="pinfo"><div class="pn">${esc(p.title)}</div><div class="pc">${esc(p.cat)} · ${fmtDate(p.at)}${n?` · 已报名 ${n} 家`:""}</div></div>
+      </div>`;
+    }).join("");
+}
+document.getElementById("adminTimeStart").addEventListener("input",renderAdminTime);
+document.getElementById("adminTimeEnd").addEventListener("input",renderAdminTime);
+document.getElementById("btnDelByTime").onclick=()=>{
+  const matched=timeMatchedProducts();
+  if(matched==null){toast("请先设置开始或结束时间");return;}
+  if(!matched.length){toast("该时间范围内没有商品");return;}
+  const ids=matched.map(p=>p.id);
+  confirmTask({
+    title:"按时间删除",
+    message:`确认删除该时间范围内的 ${ids.length} 款商品及其报名记录？此操作不可恢复。`,
+    okMsg:`已删除 ${ids.length} 款商品`,
+    run:async(p)=>{ await deleteProductsByIds(ids,p); await refreshAfterDelete(); renderAdmin(); }
+  });
+};
+
+function renderAdminCat(){
+  const box=document.getElementById("adminCatList");
+  const map=cats();
+  const keys=Object.keys(map).sort((a,b)=>map[b]-map[a]);
+  if(!keys.length){ box.innerHTML=`<div class="admin-empty">暂无商品。</div>`; return; }
+  box.innerHTML=keys.map(c=>`
+    <div class="admin-cat-row">
+      <div class="ci"><div class="cn">${esc(c)}</div><div class="cm">${map[c]} 款商品</div></div>
+      <button class="btn danger tiny" data-delcat="${esc(c)}">删除该类目</button>
+    </div>`).join("");
+  box.querySelectorAll("[data-delcat]").forEach(b=>b.onclick=()=>{
+    const c=b.dataset.delcat;
+    const n=state.products.filter(p=>p.cat===c).length;
+    confirmTask({
+      title:"删除类目",
+      message:`确认删除「${c}」类目下的全部 ${n} 款商品及其报名记录？此操作不可恢复。`,
+      okMsg:`已删除「${c}」类目（${n} 款）`,
+      run:async(p)=>{ await deleteByCategory(c,p); await refreshAfterDelete(); renderAdmin(); }
+    });
+  });
+}
+
+function renderAdminProd(){
+  const box=document.getElementById("adminProdList");
+  const q=(document.getElementById("adminProdSearch").value||"").trim().toLowerCase();
+  const list=state.products.filter(p=>!q||(p.title||"").toLowerCase().indexOf(q)>=0);
+  document.getElementById("adminSelAll").checked=false;
+  if(!list.length){ box.innerHTML=`<div class="admin-empty">${state.products.length?"未找到匹配的商品。":"暂无商品。"}</div>`; return; }
+  box.innerHTML=list.map(p=>{
+    const img=p.img?`<img class="pimg" src="${esc(p.img)}" onerror="this.style.visibility='hidden'">`:`<div class="pimg"></div>`;
+    const n=(p.claims&&p.claims.length)||0;
+    return `<div class="admin-prod-row">
+      <input type="checkbox" class="adminProdCk" value="${p.id}">
+      ${img}
+      <div class="pinfo"><div class="pn">${esc(p.title)}</div><div class="pc">${esc(p.cat)}${n?` · 已报名 ${n} 家`:""}</div></div>
+      <button class="btn danger tiny" data-delprod="${p.id}">删除</button>
+    </div>`;
+  }).join("");
+  box.querySelectorAll("[data-delprod]").forEach(b=>b.onclick=()=>{
+    const p=state.products.find(x=>x.id===b.dataset.delprod);
+    if(!p) return;
+    const pid=p.id;
+    confirmTask({
+      title:"删除商品",
+      message:`确认删除商品「${p.title}」及其报名记录？`,
+      okMsg:"已删除该商品",
+      run:async(prog)=>{ await deleteProductsByIds([pid],prog); await refreshAfterDelete(); renderAdmin(); }
+    });
+  });
+}
+document.getElementById("adminProdSearch").addEventListener("input",renderAdminProd);
+document.getElementById("adminSelAll").onclick=function(){
+  document.querySelectorAll(".adminProdCk").forEach(ck=>ck.checked=this.checked);
+};
+document.getElementById("btnDelProds").onclick=()=>{
+  const ids=[...document.querySelectorAll(".adminProdCk:checked")].map(ck=>ck.value);
+  if(!ids.length){toast("请先勾选要删除的商品");return;}
+  confirmTask({
+    title:"批量删除商品",
+    message:`确认删除所选 ${ids.length} 款商品及其报名记录？此操作不可恢复。`,
+    okMsg:`已删除 ${ids.length} 款商品`,
+    run:async(p)=>{ await deleteProductsByIds(ids,p); await refreshAfterDelete(); renderAdmin(); }
+  });
+};
+
+/* 产品标题搜索 */
+const searchInput = document.getElementById("searchInput");
+const searchClear = document.getElementById("searchClear");
+searchInput.addEventListener("input",()=>{
+  searchQuery = searchInput.value;
+  searchClear.style.display = searchQuery ? "flex" : "none";
+  renderTabs();renderGrid();
+});
+searchClear.onclick=()=>{
+  searchQuery=""; searchInput.value=""; searchClear.style.display="none";
+  searchInput.focus(); renderTabs();renderGrid();
+};
+
+/* 上传模式切换 */
+let uploadMode="sheet";
+document.querySelectorAll("#modeSeg .seg-btn").forEach(b=>b.onclick=()=>{
+  uploadMode=b.dataset.mode;
+  document.querySelectorAll("#modeSeg .seg-btn").forEach(x=>x.classList.toggle("active",x===b));
+  document.getElementById("modeSheet").style.display = uploadMode==="sheet"?"block":"none";
+  document.getElementById("modeSimple").style.display = uploadMode==="simple"?"block":"none";
+  document.getElementById("modeSingle").style.display = uploadMode==="single"?"block":"none";
+});
+
+/* ---- 单个上传：粘贴图片支持（截图/复制的图片直接 Ctrl+V）---- */
+let sgImgData = "";   // 粘贴图片压缩后的 data URL
+function sgSetPreview(dataUrl){
+  sgImgData = dataUrl || "";
+  const wrap=document.getElementById("sgImgPreview");
+  const im=document.getElementById("sgImgPreviewImg");
+  if(sgImgData){ im.src=sgImgData; wrap.style.display="block"; }
+  else{ im.src=""; wrap.style.display="none"; }
+}
+/* 把粘贴的图片用 canvas 压缩（最长边 900px，JPEG 0.82），控制体积再存库 */
+function sgCompressImage(file, cb){
+  const reader=new FileReader();
+  reader.onload=()=>{
+    const img=new Image();
+    img.onload=()=>{
+      const max=900;
+      let w=img.width, h=img.height;
+      if(w>max||h>max){ const r=Math.min(max/w,max/h); w=Math.round(w*r); h=Math.round(h*r); }
+      const cv=document.createElement("canvas"); cv.width=w; cv.height=h;
+      cv.getContext("2d").drawImage(img,0,0,w,h);
+      try{ cb(cv.toDataURL("image/jpeg",0.82)); }catch(e){ cb(reader.result); }
+    };
+    img.onerror=()=>cb(reader.result);
+    img.src=reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+function sgHandlePaste(e){
+  const items=(e.clipboardData||window.clipboardData)?.items||[];
+  for(const it of items){
+    if(it.type && it.type.indexOf("image")===0){
+      const file=it.getAsFile();
+      if(file){ e.preventDefault(); sgCompressImage(file, url=>{ sgSetPreview(url); toast("图片已粘贴"); }); return; }
+    }
+  }
+}
+(function(){
+  const drop=document.getElementById("sgImgDrop");
+  if(drop){
+    drop.addEventListener("paste", sgHandlePaste);
+    drop.addEventListener("click", ()=>drop.focus());
+  }
+  // 在整个上传弹窗内粘贴图片也能识别（单个上传模式下）
+  const um=document.getElementById("uploadMask");
+  if(um) um.addEventListener("paste", e=>{ if(uploadMode==="single") sgHandlePaste(e); });
+  const clr=document.getElementById("sgImgClear");
+  if(clr) clr.onclick=()=>{ sgSetPreview(""); };
+})();
+
+/* 判断是否像表头行（包含飞书表格的列名关键词） */
+function isHeaderRow(cells){
+  const joined = cells.join("");
+  return /类目|商品名称|商品名|名称|标题|首图|图片|图url|买手打标|打标|name|title|url|image/i.test(joined)
+      && /类目|商品名|名称|标题|首图|图片|name|title/i.test(joined);
+}
+
+/* 按表头列名建立「字段 → 列索引」映射，列顺序随意 */
+function buildColMap(header){
+  const h = header.map(s=>(s||"").toLowerCase().trim());
+  const find = (...keys)=>{
+    for(let i=0;i<h.length;i++){ if(keys.some(k=>h[i].indexOf(k)>=0)) return i; }
+    return -1;
+  };
+  // 类目：优先「一级类目」，否则任意含「类目」的列；标题：商品名称/名称/标题
+  let cat = find("一级类目","一级","类目"); if(cat<0) cat = find("类目");
+  return {
+    cat,
+    cat2: find("二级"),
+    cat3: find("三级"),
+    title: (function(){ let x=find("商品名称","商品名","名称","标题","title"); return x; })(),
+    img:  (function(){ let x=find("首图","商品首图","图片url","图url","主图"); return x; })(),
+    img2: find("商品图片","图片","image"),
+    tag:  find("买手打标","打标","标签","tag"),
+  };
+}
+/* 安全取单元格：idx<0 或越界返回空串 */
+function pick(cells, idx){ return (idx!=null && idx>=0 && idx<cells.length) ? (cells[idx]||"") : ""; }
+
+function makeProduct(cat,title,img,seed,tag,cat2,cat3){
+  if(!cat||!title) return null;
+  return {id:"p"+Date.now()+"_"+seed+"_"+Math.random().toString(36).slice(2,6),cat:cat,cat2:cat2||"",cat3:cat3||"",title:title,img:img||"",tag:tag||"",at:Date.now(),claims:[]};
+}
+
+document.getElementById("btnParse").onclick=()=>{
+  const fresh=[];
+  if(uploadMode==="sheet"){
+    const raw=document.getElementById("sheetInput").value.replace(/\r/g,"");
+    if(!raw.trim()){toast("请粘贴飞书表格内容");return;}
+    let colMap = null;   // 表头列名映射；遇到表头行时建立
+    raw.split(/\n/).forEach((line,i)=>{
+      if(!line.trim()) return;
+      const cells=line.split("\t").map(s=>s.trim());
+      if(isHeaderRow(cells)){ colMap = buildColMap(cells); return; }   // 表头：建立列名映射并跳过
+      let cat,title,img,tag,cat2,cat3;
+      if(colMap){
+        // 按表头列名取值，列顺序随意
+        cat   = pick(cells,colMap.cat) || pick(cells,colMap.cat2);
+        cat2  = pick(cells,colMap.cat2);
+        cat3  = pick(cells,colMap.cat3);
+        title = pick(cells,colMap.title);
+        img   = pick(cells,colMap.img) || pick(cells,colMap.img2);
+        tag   = pick(cells,colMap.tag);
+      }else{
+        // 无表头：回退到固定列位 0一级 1二级 2三级 3商品名称 4首图url 5商品图片 6买手打标
+        cat=cells[0]||cells[1]; cat2=cells[1]||""; cat3=cells[2]||"";
+        title=cells[3]; img=cells[4]||""; tag=cells[6]||"";
+      }
+      img=(img||"").replace(/^IMAGE\(.*\)$/i,"");      // 排除 IMAGE() 公式文本
+      if(!/^https?:\/\//i.test(img)) img="";
+      const np=makeProduct(cat,title,img,i,tag,cat2||"",cat3||""); if(np) fresh.push(np);
+    });
+    if(!fresh.length){toast("未解析到有效行：请确认包含「商品名称」列且有数据行（表头列名可任意顺序）");return;}
+    document.getElementById("sheetInput").value="";
+  }else if(uploadMode==="simple"){
+    const raw=document.getElementById("bulkInput").value.trim();
+    if(!raw){toast("请输入产品清单");return;}
+    raw.split(/\r?\n+/).forEach((line,i)=>{
+      if(!line.trim()) return;
+      const parts=splitLine(line).map(s=>s.trim());
+      if(parts.length<2||!parts[0]||!parts[1]) return;
+      const np=makeProduct(parts[0],parts[1],parts[2]||"",i,parts[3]||""); if(np) fresh.push(np);
+    });
+    if(!fresh.length){toast("未解析到有效行：每行至少需要「类目」和「标题」两个字段，用 | 分隔");return;}
+    document.getElementById("bulkInput").value="";
+  }else{
+    // 单个上传
+    const cat=document.getElementById("sgCat").value.trim();
+    const title=document.getElementById("sgTitle").value.trim();
+    const urlInput=document.getElementById("sgImgUrl").value.trim();
+    const tag=document.getElementById("sgTag").value.trim();
+    let img=sgImgData || urlInput;
+    if(!cat||!title){toast("请填写一级类目和商品标题");return;}
+    if(!img){toast("请粘贴商品首图或填写图片 URL");return;}
+    if(!sgImgData && !/^https?:\/\//i.test(img)){toast("图片 URL 需以 http(s):// 开头，或直接粘贴图片");return;}
+    const np=makeProduct(cat,title,img,0,tag); if(np) fresh.push(np);
+    if(!fresh.length){toast("发布失败：请检查填写内容");return;}
+    // 清空表单
+    document.getElementById("sgCat").value="";
+    document.getElementById("sgTitle").value="";
+    document.getElementById("sgImgUrl").value="";
+    document.getElementById("sgTag").value="";
+    sgSetPreview("");
+  }
+  closeMask();
+  applyMutation({action:"addProducts",products:fresh}, `成功发布 ${fresh.length} 款产品，所有用户均可见`);
+};
+
+function openClaim(id){
+  claimingId=id;
+  const p = state.products.find(x=>x.id===id);
+  if(!p) return;
+  const img = p.img?`<img class="pimg" src="${esc(p.img)}" onerror="this.style.display='none'">`:`<div class="pimg"></div>`;
+  document.getElementById("claimPreview").innerHTML = `${img}<div><div class="pt">${esc(p.title)}</div><div class="pc">${esc(p.cat)}</div></div>`;
+  document.getElementById("cSpu").value="";
+  document.getElementById("cSupplier").value="";
+  openMask("claimMask");
+}
+
+/* 校验单个 SPU 是否合法：字母 S（不区分大小写）+ 至少 6 位数字 */
+function isValidSpu(s){ return /^[Ss]\d{6,}$/.test(s); }
+
+document.getElementById("btnClaim").onclick=()=>{
+  const spuRaw=document.getElementById("cSpu").value.trim();
+  const supplier=document.getElementById("cSupplier").value.trim();
+  if(!spuRaw||!supplier){toast("提交失败：请填写 SPU 编号与供应商名称");return;}
+  // 支持一次填写多个 SPU，按空格/换行拆分
+  const spuList=spuRaw.split(/[\s,，、]+/).map(s=>s.trim()).filter(Boolean);
+  if(!spuList.length){toast("提交失败：SPU 不能为空");return;}
+  const bad=spuList.filter(s=>!isValidSpu(s));
+  if(bad.length){
+    toast(`提交失败：SPU 格式不正确「${bad.join("、")}」，应为 S 开头加数字（如 S251019042240）`);
+    return;
+  }
+  // 去重并规范化为大写 S
+  const spuArr=[...new Set(spuList.map(s=>s.replace(/^s/,"S")))];
+  const spu=spuArr.join(" ");
+  const pid=claimingId;
+  const prod=state.products.find(x=>x.id===pid)||{};
+  closeMask();
+  applyMutation({
+    action:"addClaims",
+    productId:pid,
+    title:prod.title||"",
+    cat:prod.cat||"",
+    claims:[{spu:spu,supplier:supplier}]
+  }, `报名成功，已计入 ${spuArr.length} 个 SPU`);
+};
+
+/* 查看已报名商家名单 */
+function openView(id){
+  const p = state.products.find(x=>x.id===id);
+  if(!p) return;
+  const img = p.img?`<img class="pimg" src="${esc(p.img)}" onerror="this.style.display='none'">`:`<div class="pimg"></div>`;
+  document.getElementById("viewPreview").innerHTML = `${img}<div><div class="pt">${esc(p.title)}</div><div class="pc">${esc(p.cat)}</div></div>`;
+  const claims = p.claims||[];
+  const box = document.getElementById("viewList");
+  if(!claims.length){
+    box.innerHTML = `<div class="view-empty">暂无商家报名，快邀请商家来认领吧。</div>`;
+  }else{
+    box.innerHTML = `<div class="view-count">已有 <b>${claims.length}</b> 家商家报名</div>` + claims.map((c,i)=>`
+      <div class="view-row">
+        <span class="vidx">${i+1}</span>
+        <div class="vinfo">
+          <div class="vsupplier">${esc(c.supplier)}</div>
+          <div class="vspu">SPU：${esc(c.spu)}</div>
+        </div>
+      </div>`).join("");
+  }
+  openMask("viewMask");
+}
+
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeMask();});
+
+/* 排行榜一键折叠/展开 */
+(function(){
+  const btn=document.getElementById("boardToggle");
+  const ul=document.getElementById("board");
+  const empty=document.getElementById("boardEmpty");
+  if(!btn) return;
+  let collapsed=false;
+  btn.onclick=()=>{
+    collapsed=!collapsed;
+    ul.style.display = collapsed ? "none" : "";
+    if(empty) empty.style.display = collapsed ? "none" : empty.style.display;
+    btn.textContent = collapsed ? "展开" : "折叠";
+  };
+})();
+
+loadLocalCache();   // 先用本地缓存秒出
+renderAll();
+loadCloud();        // 再拉取云端共享数据覆盖
+setInterval(loadCloud, 30000);   // 每 30 秒自动同步一次，多人协作更实时
+
+</script>
+</body>
+</html>
